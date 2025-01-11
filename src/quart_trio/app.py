@@ -3,7 +3,9 @@ import warnings
 from typing import Any, Awaitable, Callable, Coroutine, Optional, TypeVar, Union
 
 import trio
-from exceptiongroup import BaseExceptionGroup
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import BaseExceptionGroup
 from hypercorn.config import Config as HyperConfig
 from hypercorn.trio import serve
 from quart import Quart, request_started, websocket_started
@@ -23,7 +25,7 @@ from .wrappers import TrioRequest, TrioResponse, TrioWebsocket
 try:
     from typing import ParamSpec
 except ImportError:
-    from typing_extensions import ParamSpec  # type: ignore
+    from typing_extensions import ParamSpec
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -85,8 +87,7 @@ class QuartTrio(Quart):
         scheme = "https" if certfile is not None and keyfile is not None else "http"
         print(f"Running on {scheme}://{host}:{port} (CTRL + C to quit)")  # noqa: T201
 
-        trio.run(self.run_task, host, port, debug, ca_certs, certfile, keyfile, insecure_host,
-                 insecure_port)  # type: ignore
+        trio.run(self.run_task, host, port, debug, ca_certs, certfile, keyfile, insecure_host)
 
     def run_task(
         self,
@@ -243,7 +244,7 @@ class QuartTrio(Quart):
 
     async def open_instance_resource(
         self, path: FilePath, mode: str = "rb"
-    ) -> trio._file_io.AsyncIOWrapper:  # type: ignore
+    ) -> trio._file_io.AsyncIOWrapper:
         """Open a file for reading.
 
         Use as
@@ -255,9 +256,7 @@ class QuartTrio(Quart):
         """
         return await trio.open_file(self.instance_path / file_path_to_path(path), mode)
 
-    async def open_resource(
-        self, path: FilePath, mode: str = "rb"
-    ) -> trio._file_io.AsyncIOWrapper:  # type: ignore
+    async def open_resource(self, path: FilePath, mode: str = "rb") -> trio._file_io.AsyncIOWrapper:
         """Open a file for reading.
 
         Use as
