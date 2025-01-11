@@ -1,7 +1,8 @@
-0.11.1b 2023-11-19
+0.12.0 2025-01-09
 -----------------
 
-* Support listening to http and https simultaneously
+* Forward task_status to hypercorn.
+* Support Python 3.13, and 3.12 drop Python 3.8 and 3.7.
 
 0.11.1 2023-11-19
 -----------------

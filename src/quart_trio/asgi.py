@@ -1,9 +1,9 @@
+import sys
 from functools import partial
 from typing import cast, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlparse
 
 import trio
-from exceptiongroup import BaseExceptionGroup
 from hypercorn.typing import (
     ASGIReceiveCallable,
     ASGISendCallable,
@@ -21,6 +21,9 @@ from werkzeug.datastructures import Headers
 
 if TYPE_CHECKING:
     from quart_trio import QuartTrio  # noqa: F401
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import BaseExceptionGroup
 
 
 class TrioASGIHTTPConnection(ASGIHTTPConnection):
@@ -74,7 +77,9 @@ class TrioASGIWebsocketConnection(ASGIWebsocketConnection):
             event = await receive()
             if event["type"] == "websocket.receive":
                 message = event.get("bytes") or event["text"]
-                await websocket_received.send_async(message, _sync_wrapper=self.app.ensure_async)
+                await websocket_received.send_async(
+                    message, _sync_wrapper=self.app.ensure_async  # type: ignore
+                )
                 await self.send_channel.send(message)
             elif event["type"] == "websocket.disconnect":
                 break

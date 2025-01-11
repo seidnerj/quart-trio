@@ -1,11 +1,14 @@
+import sys
 from typing import NoReturn
 
 import pytest
-from exceptiongroup import BaseExceptionGroup
 from quart import ResponseReturnValue
 from quart.testing import WebsocketResponseError
 
 from quart_trio import QuartTrio
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import BaseExceptionGroup
 
 
 @pytest.fixture(name="error_app", scope="function")
@@ -48,8 +51,10 @@ async def test_websocket_exception_group_handling(error_app: QuartTrio) -> None:
     try:
         async with test_client.websocket("/ws/") as test_websocket:
             await test_websocket.receive()
-    except WebsocketResponseError as error:
-        assert error.response.status_code == 201
+    except BaseExceptionGroup as error:
+        for exception in error.exceptions:
+            if isinstance(exception, WebsocketResponseError):
+                assert exception.response.status_code == 201
 
 
 @pytest.mark.trio
@@ -65,8 +70,10 @@ async def test_websocket_exception_group_unhandled(error_app: QuartTrio) -> None
     try:
         async with test_client.websocket("/ws/") as test_websocket:
             await test_websocket.receive()
-    except WebsocketResponseError as error:
-        assert error.response.status_code == 500
+    except BaseExceptionGroup as error:
+        for exception in error.exceptions:
+            if isinstance(exception, WebsocketResponseError):
+                assert exception.response.status_code == 500
 
 
 @pytest.mark.trio
